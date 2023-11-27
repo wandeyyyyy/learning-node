@@ -1,14 +1,37 @@
 const Joi = require('joi');
+const config = require('config');
 const logger = require('./logger');
 const login = require('./login');
 const express = require('express');
 const app = express();
+const helmet = require('helmet');
+const morgan = require('morgan');
+const startupDebugger = require('debug') ('app:startup');
+const dbDebugger = require('debug') ('app:db');
+
+
+
+
+// middleware
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(express.static('public'));
+app.use(helmet());
+
+
+
+
+if(app.get('env') === 'development'){
+    app.use(morgan('tiny'));
+startupDebugger('Morgan Enabled...')
+}
+
 app.use(login);
 app.use(logger);
-// middleware
+console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`app: ${app.get('env')}`);
+dbDebugger('connected to database...')
+
 
 
 const courses = [
@@ -16,7 +39,9 @@ const courses = [
     {id: 2, name:"css"},
     {id: 3, name:"javascript"}
 ]
-
+console.log('Application Name' + config.get('name'));
+// console.log('Mail Server '+ config.get('mail.host'));
+console.log('Mail Password'+ config.get('mail.password'));
 
 
 // to get all courses
@@ -90,6 +115,6 @@ function validateCourse(course) {
     return Joi.validate(course, schema)
 }
  
-const port = process.env.PORT || 2000;
+const port = process.env.PORT || 3000;
 
 app.listen(port, () => {console.log(`listening on port ${port}...`)})
